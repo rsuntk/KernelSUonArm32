@@ -3,20 +3,14 @@ use crate::module::{handle_updated_modules, prune_modules};
 use crate::{assets, defs, ksucalls, restorecon, utils};
 use anyhow::{Context, Result};
 use log::{info, warn};
-use rustix::fs::{MountFlags, mount};
+use rustix::fs::{mount, MountFlags};
 use std::path::Path;
 
 // https://github.com/tiann/KernelSU/blob/v0.9.5/userspace/ksud/src/mount.rs#L158
 #[cfg(any(target_os = "linux", target_os = "android"))]
 fn mount_tmpfs(dest: impl AsRef<Path>) -> Result<()> {
     info!("mount tmpfs on {}", dest.as_ref().display());
-    mount(
-        KSU_MOUNT_SOURCE,
-        dest.as_ref(),
-        "tmpfs",
-        MountFlags::empty(),
-        "",
-    )?;
+    mount(KSU_MOUNT_SOURCE, dest.as_ref(), "tmpfs", MountFlags::empty(), "")?;
     Ok(())
 }
 
