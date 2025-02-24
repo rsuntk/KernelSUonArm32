@@ -12,9 +12,9 @@ use rustix::mount::mount_change;
 use rustix::path::Arg;
 use std::cmp::PartialEq;
 use std::collections::HashMap;
-use std::fs;
 use std::collections::hash_map::Entry;
 use std::fs::{DirEntry, FileType, create_dir, create_dir_all, read_dir, read_link};
+use std::fs;
 use std::os::unix::fs::{FileTypeExt, symlink};
 use std::path::{Path, PathBuf};
 
