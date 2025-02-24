@@ -83,6 +83,7 @@ jobs:
 
       - name: Copy ksud to app jniLibs
         run: |
+          mkdir -p app/src/main/jniLibs/armeabi-v7a
           cp -f ../armv7-linux-androideabi/release/ksud ../manager/app/src/main/jniLibs/armeabi-v7a/libksud.so
 
       - name: Build with Gradle
