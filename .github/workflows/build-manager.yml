@@ -20,7 +20,7 @@ jobs:
     strategy:
       matrix:
         include:
-          - target: aarch64-linux-android
+          - target: armv7-linux-androideabi
             os: ubuntu-latest
     uses: ./.github/workflows/ksud.yml
     with:
@@ -75,15 +75,15 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Download arm64 ksud
+      - name: Download arm ksud
         uses: actions/download-artifact@v4
         with:
-          name: ksud-aarch64-linux-android
+          name: ksud-armv7-linux-androideabi
           path: .
 
       - name: Copy ksud to app jniLibs
         run: |
-          cp -f ../aarch64-linux-android/release/ksud ../manager/app/src/main/jniLibs/arm64-v8a/libksud.so
+          cp -f ../armv7-linux-androideabi/release/ksud ../manager/app/src/main/jniLibs/armeabi-v7a/libksud.so
 
       - name: Build with Gradle
         run: |
