@@ -138,7 +138,7 @@ void apply_kernelsu_rules()
 	rcu_read_unlock();
 }
 
-#define MAX_SEPOL_LEN 128
+#define MAX_SEPOL_LEN 64
 
 #define CMD_NORMAL_PERM 1
 #define CMD_XPERM 2

@@ -365,7 +365,7 @@ where
     Ok(statements)
 }
 
-const SEPOLICY_MAX_LEN: usize = 128;
+const SEPOLICY_MAX_LEN: usize = 64;
 
 const CMD_NORMAL_PERM: u32 = 1;
 const CMD_XPERM: u32 = 2;
