@@ -11,7 +11,7 @@ use std::path::Path;
 fn mount_tmpfs(dest: impl AsRef<Path>) -> Result<()> {
     info!("mount tmpfs on {}", dest.as_ref().display());
     mount(
-        KSU_OVERLAY_SOURCE,
+        KSU_MOUNT_SOURCE,
         dest.as_ref(),
         "tmpfs",
         MountFlags::empty(),
