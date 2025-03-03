@@ -138,11 +138,14 @@ pub fn load_sepolicy_rule() -> Result<()> {
         if !rule_file.exists() {
             return Ok(());
         }
-        info!("load policy: {}", &rule_file.display());
 
-        if sepolicy::apply_file(&rule_file).is_err() {
-            warn!("Failed to load sepolicy.rule for {}", &rule_file.display());
-        }
+        info!("load policy: {}", &rule_file.display());
+        Command::new(assets::MAGISKPOLICY_PATH)
+            .arg("--live")
+            .arg("--apply")
+            .arg(&rule_file)
+            .status()
+            .with_context(|| format!("Failed to exec {}", rule_file.display()))?;
         Ok(())
     })?;
 

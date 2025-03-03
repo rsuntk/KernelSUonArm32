@@ -7,6 +7,7 @@ use crate::{defs::BINARY_DIR, utils};
 
 pub const RESETPROP_PATH: &str = concatcp!(BINARY_DIR, "resetprop");
 pub const BUSYBOX_PATH: &str = concatcp!(BINARY_DIR, "busybox");
+pub const MAGISKPOLICY_PATH: &str = concatcp!(BINARY_DIR, "magiskpolicy");
 pub const BOOTCTL_PATH: &str = concatcp!(BINARY_DIR, "bootctl");
 
 // IF NOT x86_64 ANDROID, ie. macos, linux, windows, always use aarch64
