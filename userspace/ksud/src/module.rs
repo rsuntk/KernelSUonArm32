@@ -3,7 +3,6 @@ use crate::utils::*;
 use crate::{
     assets, defs, ksucalls,
     restorecon::{restore_syscon, setsyscon},
-    sepolicy,
 };
 
 use anyhow::{anyhow, bail, ensure, Context, Result};

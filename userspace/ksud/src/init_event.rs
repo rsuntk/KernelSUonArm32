@@ -1,4 +1,4 @@
-use crate::defs::{KSU_MOUNT_SOURCE, NO_MOUNT_PATH, NO_TMPFS_PATH};
+use crate::defs::{KSU_MOUNT_SOURCE, NO_MOUNT_PATH, NO_TMPFS_PATH, NO_SEPOLICY_PATCH};
 use crate::module::{handle_updated_modules, prune_modules};
 use crate::{assets, defs, ksucalls, restorecon, utils};
 use anyhow::{Context, Result};
