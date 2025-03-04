@@ -43,3 +43,5 @@ pub const BACKUP_FILENAME: &str = "stock_image.sha1";
 
 pub const NO_TMPFS_PATH: &str = concatcp!(WORKING_DIR, ".notmpfs");
 pub const NO_MOUNT_PATH: &str = concatcp!(WORKING_DIR, ".nomount");
+
+pub const NO_SEPOLICY_PATCH: &str = concatcp!(WORKING_DIR, ".skip_sepolicy")

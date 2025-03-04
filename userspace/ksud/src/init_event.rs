@@ -92,8 +92,12 @@ pub fn on_post_data_fs() -> Result<()> {
     }
 
     // load sepolicy.rule
-    if crate::module::load_sepolicy_rule().is_err() {
-        warn!("load sepolicy.rule failed");
+    if !Path::new(NO_SEPOLICY_PATCH).exists() {
+        if crate::module::load_sepolicy_rule().is_err() {
+            warn!("load sepolicy.rule failed");
+        }
+    } else {
+        info!("skip load sepolicy.rule");
     }
 
     if let Err(e) = crate::profile::apply_sepolies() {
