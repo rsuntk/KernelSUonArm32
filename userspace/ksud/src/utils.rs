@@ -236,7 +236,7 @@ pub fn get_tmp_path() -> &'static str {
 
     CHOSEN_TMP_PATH.get_or_init(|| {
         let r = find_temp_path();
-        log::info!("Chosen temp_path: {}", r);
+        log::info!("chosen tmp path: {}", r);
         r
     })
 }

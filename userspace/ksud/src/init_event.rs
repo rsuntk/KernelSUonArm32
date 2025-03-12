@@ -9,7 +9,6 @@ use std::path::Path;
 // https://github.com/tiann/KernelSU/blob/v0.9.5/userspace/ksud/src/mount.rs#L158
 #[cfg(any(target_os = "linux", target_os = "android"))]
 fn mount_tmpfs(dest: impl AsRef<Path>) -> Result<()> {
-    info!("mount tmpfs on {}", dest.as_ref().display());
     mount(
         KSU_MOUNT_SOURCE,
         dest.as_ref(),
