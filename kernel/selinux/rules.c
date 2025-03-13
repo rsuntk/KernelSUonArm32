@@ -137,9 +137,3 @@ void apply_kernelsu_rules()
 
 	rcu_read_unlock();
 }
-
-int handle_sepolicy(unsigned long arg3, void __user *arg4)
-{
-	pr_info("sepol: skip kernel sepol driver");
-	return 0;
-}

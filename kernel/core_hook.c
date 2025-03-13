@@ -52,8 +52,6 @@
 
 static bool ksu_module_mounted = false;
 
-extern int handle_sepolicy(unsigned long arg3, void __user *arg4);
-
 static bool ksu_su_compat_enabled = true;
 extern void ksu_sucompat_init();
 extern void ksu_sucompat_exit();
@@ -359,15 +357,7 @@ int ksu_handle_prctl(int option, unsigned long arg2, unsigned long arg3,
 	}
 
 	if (arg2 == CMD_SET_SEPOLICY) {
-		if (!from_root) {
-			return 0;
-		}
-		if (!handle_sepolicy(arg3, arg4)) {
-			if (copy_to_user(result, &reply_ok, sizeof(reply_ok))) {
-				pr_err("sepolicy: prctl reply error\n");
-			}
-		}
-
+		pr_info("%s: ignore cmd: %ld\n", __func__, arg2);
 		return 0;
 	}
 
