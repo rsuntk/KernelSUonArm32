@@ -28,6 +28,5 @@ config KSU_CMDLINE
 	help
 	  Enable a cmdline called kernelsu.enabled
 	  Value 1 means enabled, value 0 means disabled.
-	  affected.
 
 endmenu
