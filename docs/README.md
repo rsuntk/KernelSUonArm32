@@ -5,13 +5,10 @@
 A Kernel-based root solution for Android devices.
 
 > [!NOTE]
-> Official KernelSU support for Non-GKI kernels has been ended.
+> Official KernelSU will never support armeabi-v7a!
 >
 > This is unofficial forks, all rights reserved to [@tiann](https://github.com/tiann)
 
-[![Latest release](https://img.shields.io/github/v/release/rsuntk/KernelSU?label=Release&logo=github)](https://github.com/rsuntk/KernelSU/releases/latest)
-[![Weblate](https://img.shields.io/badge/Localization-Weblate-teal?logo=weblate)](https://hosted.weblate.org/engage/kernelsu)
-[![Channel](https://img.shields.io/badge/Follow-Telegram-blue.svg?logo=telegram)](https://t.me/KernelSU)
 [![License: GPL v2](https://img.shields.io/badge/License-GPL%20v2-orange.svg?logo=gnu)](https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html)
 [![GitHub License](https://img.shields.io/github/license/tiann/KernelSU?logo=gnu)](/LICENSE)
 
@@ -20,17 +17,12 @@ A Kernel-based root solution for Android devices.
 curl -LSs "https://raw.githubusercontent.com/rsuntk/KernelSUonArm32/main/kernel/setup.sh" | bash -s main
 ```
 
-## Hook method
-
-1. `KPROBES` hook
-2. Manual hook (For GKI: Use `#ifdef CONFIG_KSU_MANUAL_HOOK` instead of `#ifdef CONFIG_KSU` for guard certain kernelsu hook)
-
 ## Features
 
 1. Kernel-based `su` and root access management.
 2. Module system based on [5ec1cff's Magic Mount API on KernelSU](https://github.com/5ec1cff/KernelSU)
 3. [App Profile](https://kernelsu.org/guide/app-profile.html): Lock up the root power in a cage.
-4. Bringing back non-GKI/GKI 1.0 support
+4. Added experimental armeabi-v7a support
 
 ## Compatibility State
 
@@ -38,17 +30,11 @@ KernelSU (before v1.0.0) officially supports Android GKI 2.0 devices (kernel 5.1
 
 With this, WSA, ChromeOS, and container-based Android are all supported.
 
-Currently, only `arm64-v8a` are supported.
-
 ## Usage
 
 - [Installation Instruction](https://kernelsu.org/guide/installation.html)
 - [How to build?](https://kernelsu.org/guide/how-to-build.html)
 - [Official Website](https://kernelsu.org/)
-
-## Discussion
-
-- Telegram: [@KernelSU](https://t.me/KernelSU)
 
 ## Security
 
@@ -61,6 +47,7 @@ For information on reporting security vulnerabilities in KernelSU, see [SECURITY
 
 ## Credits
 
+- [KernelSU](https://github.com/tiann/KernelSU): Original KernelSU projects.
 - [kernel-assisted-superuser](https://git.zx2c4.com/kernel-assisted-superuser/about/): the KernelSU idea.
 - [Magisk](https://github.com/topjohnwu/Magisk): the powerful root tool.
 - [genuine](https://github.com/brevent/genuine/): apk v2 signature validation.
