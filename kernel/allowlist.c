@@ -34,6 +34,18 @@ static struct non_root_profile default_non_root_profile;
 static int allow_list_arr[PAGE_SIZE / sizeof(int)] __read_mostly __aligned(PAGE_SIZE);
 static int allow_list_pointer __read_mostly = 0;
 
+// fixme: this is old fix, shouldn't use this!! we have selinux rules for this!!
+// mayfix: error -13/-EACCES/-EPERM
+static struct file *permissive_filp_open(const char *filename, int flags, umode_t mode)
+{
+	struct file *fp;
+	bool enforcing = getenforce();
+	if (enforcing) setenforce(false);
+	fp = ksu_filp_open_compat(filename, flags, mode);
+	if (enforcing) setenforce(true);
+	return fp;
+}
+
 static void remove_uid_from_arr(uid_t uid)
 {
 	int *temp_arr;
@@ -360,7 +372,7 @@ void do_save_allow_list(struct work_struct *work)
 	loff_t off = 0;
 
 	struct file *fp =
-		ksu_filp_open_compat(KERNEL_SU_ALLOWLIST, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+		permissive_filp_open(KERNEL_SU_ALLOWLIST, O_WRONLY | O_CREAT | O_TRUNC, 0644);
 	if (IS_ERR(fp)) {
 		pr_err("save_allow_list create file failed: %ld\n", PTR_ERR(fp));
 		return;
@@ -407,7 +419,7 @@ void do_load_allow_list(struct work_struct *work)
 #endif
 
 	// load allowlist now!
-	fp = ksu_filp_open_compat(KERNEL_SU_ALLOWLIST, O_RDONLY, 0);
+	fp = permissive_filp_open(KERNEL_SU_ALLOWLIST, O_RDONLY, 0);
 	if (IS_ERR(fp)) {
 		pr_err("load_allow_list open file failed: %ld\n", PTR_ERR(fp));
 		return;
