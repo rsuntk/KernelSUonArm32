@@ -171,18 +171,6 @@ enum Debug {
 
 #[derive(clap::Subcommand, Debug)]
 enum Sepolicy {
-    /// Patch sepolicy
-    Patch {
-        /// sepolicy statements
-        sepolicy: String,
-    },
-
-    /// Apply sepolicy from file
-    Apply {
-        /// sepolicy file path
-        file: String,
-    },
-
     /// Check if sepolicy statement is supported/valid
     Check {
         /// sepolicy statements
@@ -319,20 +307,18 @@ pub fn run() -> Result<()> {
         Commands::Install { magiskboot } => utils::install(magiskboot),
         Commands::Uninstall { magiskboot } => utils::uninstall(magiskboot),
         Commands::Sepolicy { command } => match command {
-            Sepolicy::Patch { sepolicy } => crate::sepolicy::live_patch(&sepolicy),
-            Sepolicy::Apply { file } => crate::sepolicy::apply_file(file),
-            Sepolicy::Check { sepolicy } => crate::sepolicy::check_rule(&sepolicy),
+            Sepolicy::Check { sepolicy } => crate::dummy_sepolicy::check_rule(&sepolicy),
         },
         Commands::Services => init_event::on_services(),
         Commands::Profile { command } => match command {
-            Profile::GetSepolicy { package } => crate::profile::get_sepolicy(package),
+            Profile::GetSepolicy { package } => crate::dummy_profile::get_sepolicy(package),
             Profile::SetSepolicy { package, policy } => {
-                crate::profile::set_sepolicy(package, policy)
+                crate::dummy_profile::set_sepolicy(package, policy)
             }
-            Profile::GetTemplate { id } => crate::profile::get_template(id),
-            Profile::SetTemplate { id, template } => crate::profile::set_template(id, template),
-            Profile::DeleteTemplate { id } => crate::profile::delete_template(id),
-            Profile::ListTemplates => crate::profile::list_templates(),
+            Profile::GetTemplate { id } => crate::dummy_profile::get_template(id),
+            Profile::SetTemplate { id, template } => crate::dummy_profile::set_template(id, template),
+            Profile::DeleteTemplate { id } => crate::dummy_profile::delete_template(id),
+            Profile::ListTemplates => crate::dummy_profile::list_templates(),
         },
 
         Commands::Debug { command } => match command {

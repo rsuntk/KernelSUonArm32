@@ -86,10 +86,6 @@ pub fn on_post_data_fs() -> Result<()> {
         info!("skip load sepolicy.rule");
     }
 
-    if let Err(e) = crate::profile::apply_sepolies() {
-        warn!("apply root profile sepolicy failed: {}", e);
-    }
-
     // mount temp dir
     if !Path::new(NO_TMPFS_PATH).exists() {
         if let Err(e) = mount_tmpfs(utils::get_tmp_path()) {

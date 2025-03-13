@@ -9,9 +9,9 @@ mod ksucalls;
 #[cfg(target_os = "android")]
 mod magic_mount;
 mod module;
-mod profile;
+mod dummy_profile;
+mod dummy_sepolicy;
 mod restorecon;
-mod sepolicy;
 mod su;
 mod utils;
 

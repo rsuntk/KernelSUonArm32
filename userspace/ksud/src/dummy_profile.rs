@@ -24,7 +24,3 @@ pub fn delete_template(_id: String) -> Result<()> {
 pub fn list_templates() -> Result<()> {
     Ok(())
 }
-
-pub fn apply_sepolies() -> Result<()> {
-    Ok(())
-}
