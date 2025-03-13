@@ -19,30 +19,6 @@ ifneq ($(shell grep -q "int path_umount" $(srctree)/fs/namespace.c; echo $$?),0)
 $(error -- Backporting path_umount is mandatory !! Read: https://kernelsu.org/guide/how-to-integrate-for-non-gki.html#how-to-backport-path-umount)
 endif
 
-# https://github.com/tiann/KernelSU/pull/2102/files#diff-3a325663233178293ee38b8161f3be511a466af7e0156b9d03d5aed0497564bfR19
-NEED_KPROBES := $(strip $(shell \
-    if [ "$(VERSION)" -ge "5" -a "$(PATCHLEVEL)" -ge "10" ]; then \
-      echo TRUE; \
-    else \
-      echo FALSE; \
-    fi \
-  ))
-
-
-ifeq ($(NEED_KPROBES),TRUE)
-$(info -- KernelSU: Kernel version is greater or equal to 5.10!)
-# GKI manual hook checks
-# https://github.com/Pzqqt/android_kernel_xiaomi_marble/commit/5b8596b5604bcd0e6e12697a01136a0bb9eb0257
-ifeq ($(CONFIG_KSU_MANUAL_HOOK),y)
-$(info -- KernelSU: Hooks with Manual hook!)
-ifeq ($(CONFIG_KSU),m)
-$(error CONFIG_KSU_MANUAL_HOOK cannot be enabled when compiling KernelSU as LKM!)
-endif
-else
-ccflags-y += -DKSU_HOOK_WITH_KPROBES
-endif
-endif
-
 obj-$(CONFIG_KSU) += kernelsu.o
 
 # .git is a text file while the module is imported by 'git submodule add'.
@@ -110,7 +86,7 @@ endif
 
 $(info -- KernelSU Manager signature size: $(KSU_EXPECTED_SIZE))
 $(info -- KernelSU Manager signature hash: $(KSU_EXPECTED_HASH))
-$(info -- Supported Unofficial Manager: rsuntk (Non-GKI), 5ec1cff (GKI)) 
+$(info -- Supported Unofficial Manager: rsuntk (32-bit)) 
 
 ccflags-y += -DEXPECTED_SIZE=$(KSU_EXPECTED_SIZE)
 ccflags-y += -DEXPECTED_HASH=\"$(KSU_EXPECTED_HASH)\"

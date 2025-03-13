@@ -5,7 +5,6 @@
 #include <linux/workqueue.h>
 
 #include "allowlist.h"
-#include "arch.h"
 #include "core_hook.h"
 #include "klog.h" // IWYU pragma: keep
 #include "ksu.h"
@@ -84,12 +83,7 @@ int __init kernelsu_init(void)
 
 	ksu_throne_tracker_init();
 
-#ifdef KSU_HOOK_WITH_KPROBES
-	ksu_sucompat_init();
-	ksu_ksud_init();
-#else
 	pr_debug("init ksu driver\n");
-#endif
 
 #ifdef MODULE
 #ifndef CONFIG_KSU_DEBUG
@@ -111,11 +105,6 @@ void kernelsu_exit(void)
 	ksu_throne_tracker_exit();
 
 	destroy_workqueue(ksu_workqueue);
-
-#ifdef KSU_HOOK_WITH_KPROBES
-	ksu_ksud_exit();
-	ksu_sucompat_exit();
-#endif
 
 	ksu_core_exit();
 }
