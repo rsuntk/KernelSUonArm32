@@ -35,14 +35,32 @@ static int allow_list_arr[PAGE_SIZE / sizeof(int)] __read_mostly __aligned(PAGE_
 static int allow_list_pointer __read_mostly = 0;
 
 // fixme: this is old fix, shouldn't use this!! we have selinux rules for this!!
-// mayfix: error -13/-EACCES/-EPERM
-static struct file *permissive_filp_open(const char *filename, int flags, umode_t mode)
+// mayfix: error -13/-EPERM
+static struct file *allowlist_filp_open(const char *filename, int flags, umode_t mode)
 {
 	struct file *fp;
 	bool enforcing = getenforce();
-	if (enforcing) setenforce(false);
+
+#ifdef CONFIG_KSU_DEBUG
+	pr_info("%s: filename: %s, flags: %d\n", __func__, filename, flags);
+#endif
+	
 	fp = ksu_filp_open_compat(filename, flags, mode);
-	if (enforcing) setenforce(true);
+	if (IS_ERR(fp)) {
+		// check for -EPERM
+		if ((PTR_ERR(fp) == -EPERM) && (enforcing)) {
+			pr_info("%s: attempting with permissive\n");
+			setenforce(false);
+			fp = ksu_filp_open_compat(filename, flags, mode);
+			setenforce(true);
+			if (IS_ERR(fp))
+				pr_err("permissive filp_open failed, err: %ld\n", PTR_ERR(fp));
+			
+			goto result;
+		} else
+			pr_err("%s: failed, err: %ld\n", __func__, PTR_ERR(fp));
+	}
+result:
 	return fp;
 }
 
@@ -372,7 +390,7 @@ void do_save_allow_list(struct work_struct *work)
 	loff_t off = 0;
 
 	struct file *fp =
-		permissive_filp_open(KERNEL_SU_ALLOWLIST, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+		allowlist_filp_open(KERNEL_SU_ALLOWLIST, O_WRONLY | O_CREAT | O_TRUNC, 0644);
 	if (IS_ERR(fp)) {
 		pr_err("save_allow_list create file failed: %ld\n", PTR_ERR(fp));
 		return;
@@ -419,7 +437,7 @@ void do_load_allow_list(struct work_struct *work)
 #endif
 
 	// load allowlist now!
-	fp = permissive_filp_open(KERNEL_SU_ALLOWLIST, O_RDONLY, 0);
+	fp = allowlist_filp_open(KERNEL_SU_ALLOWLIST, O_RDONLY, 0);
 	if (IS_ERR(fp)) {
 		pr_err("load_allow_list open file failed: %ld\n", PTR_ERR(fp));
 		return;
