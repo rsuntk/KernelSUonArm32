@@ -878,7 +878,7 @@ checksum = "30bde2b3dc3671ae49d8e2e9f044c7c005836e7a023ee57cffa25ab82764bb9e"
 [[package]]
 name = "loopdev"
 version = "0.5.0"
-source = "git+https://github.com/rsuntk/loopdev?branch=rustix#7d064540580358c33e4a33c171be6fec33ab9ec1"
+source = "git+https://github.com/rsuntk/loopdev?branch=rustix#3f3f25800fef0e4262d23ebbdc1a707b1a74136c"
 dependencies = [
  "errno 0.3.10",
  "libc",
