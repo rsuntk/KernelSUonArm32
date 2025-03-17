@@ -17,6 +17,18 @@ A Kernel-based root solution for Android devices.
 curl -LSs "https://raw.githubusercontent.com/rsuntk/KernelSUonArm32/main/kernel/setup.sh" | bash -s main
 ```
 
+## What's working?
+
+- Root access
+- Manager app
+- Module installations
+
+## What's broken?
+
+- SEPolicy patcher and some rules, causing allowlist error -13 (addressing that issue)
+- Root Profile (we use magiskpolicy instead of prebuilt one)
+- You tell me.
+
 ## Features
 
 1. Kernel-based `su` and root access management.
