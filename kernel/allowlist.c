@@ -44,18 +44,17 @@ static struct file *allowlist_filp_open(const char *filename, int flags, umode_t
 #ifdef CONFIG_KSU_DEBUG
 	pr_info("%s: filename: %s, flags: %d\n", __func__, filename, flags);
 #endif
-	
+
 	fp = ksu_filp_open_compat(filename, flags, mode);
 	if (IS_ERR(fp)) {
-		// check for -EPERM
-		if ((PTR_ERR(fp) == -EPERM) && (enforcing)) {
+		if (enforcing) {
 			pr_info("%s: attempting with permissive\n");
 			setenforce(false);
 			fp = ksu_filp_open_compat(filename, flags, mode);
 			setenforce(true);
 			if (IS_ERR(fp))
 				pr_err("permissive filp_open failed, err: %ld\n", PTR_ERR(fp));
-			
+
 			goto result;
 		} else
 			pr_err("%s: failed, err: %ld\n", __func__, PTR_ERR(fp));
