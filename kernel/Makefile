@@ -5,7 +5,6 @@ kernelsu-objs += sucompat.o
 kernelsu-objs += throne_tracker.o
 kernelsu-objs += core_hook.o
 kernelsu-objs += ksud.o
-kernelsu-objs += embed_ksud.o
 kernelsu-objs += kernel_compat.o
 
 kernelsu-objs += selinux/selinux.o
