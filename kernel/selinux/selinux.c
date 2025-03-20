@@ -43,13 +43,6 @@ void setup_selinux(const char *domain)
 		pr_err("transive domain failed.\n");
 		return;
 	}
-
-	/* we didn't need this now, we have change selinux rules when boot!
-if (!is_domain_permissive) {
-  if (set_domain_permissive() == 0) {
-      is_domain_permissive = true;
-  }
-}*/
 }
 
 void setenforce(bool enforce)
@@ -60,6 +53,12 @@ void setenforce(bool enforce)
 #else
 	selinux_enforcing = enforce;
 #endif
+#endif
+// samsung stuff
+#if defined(KSU_COMPAT_SELINUX_SEC_PORT) &&	\
+	defined(CONFIG_SECURITY_SELINUX_DEVELOP)
+	// int selinux_enforcing;
+	selinux_enforcing = enforce;
 #endif
 }
 
@@ -83,6 +82,13 @@ bool getenforce()
 #endif
 #else
 	return true;
+#endif
+
+// samsung stuff
+#if defined(KSU_COMPAT_SELINUX_SEC_PORT) &&	\
+	defined(CONFIG_SECURITY_SELINUX_DEVELOP)
+	// int selinux_enforcing;
+	return selinux_enforcing >= 1;
 #endif
 }
 

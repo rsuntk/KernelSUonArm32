@@ -70,6 +70,10 @@ endif
 ifeq ($(shell grep -q "CONFIG_KDP_CRED" $(srctree)/kernel/cred.c; echo $$?),0)
 ccflags-y += -DSAMSUNG_UH_DRIVER_EXIST
 endif
+ifeq ($(shell grep -q "SEC_SELINUX_PORTING_COMMON" $(srctree)/security/selinux/hooks.c; echo $$?),0)
+$(info -- KernelSU compat: Samsung SELinux porting)
+ccflags-y += -DKSU_COMPAT_SELINUX_SEC_PORT
+endif
 
 ifndef KSU_EXPECTED_SIZE
 KSU_EXPECTED_SIZE := 0x389
