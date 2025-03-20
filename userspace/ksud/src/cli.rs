@@ -307,7 +307,7 @@ pub fn run() -> Result<()> {
         Commands::Install { magiskboot } => utils::install(magiskboot),
         Commands::Uninstall { magiskboot } => utils::uninstall(magiskboot),
         Commands::Sepolicy { command } => match command {
-            Sepolicy::Check { sepolicy } => crate::dummy_sepolicy::check_rule(&sepolicy),
+            Sepolicy::Check { sepolicy } => crate::sepolicy::check_rule(&sepolicy),
         },
         Commands::Services => init_event::on_services(),
         Commands::Profile { command } => match command {

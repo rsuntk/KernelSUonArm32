@@ -10,7 +10,7 @@ mod ksucalls;
 mod magic_mount;
 mod module;
 mod dummy_profile;
-mod dummy_sepolicy;
+mod sepolicy;
 mod restorecon;
 mod su;
 mod utils;
