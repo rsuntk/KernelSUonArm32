@@ -7,7 +7,7 @@ use nom::{
     character::complete::{space0, space1},
     combinator::map,
 };
-use std::{path::Path, vec};
+use std::{ffi, path::Path, vec};
 
 type SeObject<'a> = Vec<&'a str>;
 
@@ -362,6 +362,333 @@ where
         }
     }
     Ok(statements)
+}
+
+const SEPOLICY_MAX_LEN: usize = 128;
+
+const CMD_NORMAL_PERM: u32 = 1;
+const CMD_XPERM: u32 = 2;
+const CMD_TYPE_STATE: u32 = 3;
+const CMD_TYPE: u32 = 4;
+const CMD_TYPE_ATTR: u32 = 5;
+const CMD_ATTR: u32 = 6;
+const CMD_TYPE_TRANSITION: u32 = 7;
+const CMD_TYPE_CHANGE: u32 = 8;
+const CMD_GENFSCON: u32 = 9;
+
+#[derive(Debug, Default)]
+enum PolicyObject {
+    All, // for "*", stand for all objects, and is NULL in ffi
+    One([u8; SEPOLICY_MAX_LEN]),
+    #[default]
+    None,
+}
+
+impl TryFrom<&str> for PolicyObject {
+    type Error = anyhow::Error;
+    fn try_from(s: &str) -> Result<Self> {
+        anyhow::ensure!(s.len() <= SEPOLICY_MAX_LEN, "policy object too long");
+        if s == "*" {
+            return Ok(PolicyObject::All);
+        }
+        let mut buf = [0u8; SEPOLICY_MAX_LEN];
+        buf[..s.len()].copy_from_slice(s.as_bytes());
+        Ok(PolicyObject::One(buf))
+    }
+}
+
+/// atomic statement, such as: allow domain1 domain2:file1 read;
+/// normal statement would be expand to atomic statement, for example:
+/// allow domain1 domain2:file1 { read write }; would be expand to two atomic statement
+/// allow domain1 domain2:file1 read;allow domain1 domain2:file1 write;
+#[allow(clippy::too_many_arguments)]
+#[derive(Debug, new)]
+struct AtomicStatement {
+    cmd: u32,
+    subcmd: u32,
+    sepol1: PolicyObject,
+    sepol2: PolicyObject,
+    sepol3: PolicyObject,
+    sepol4: PolicyObject,
+    sepol5: PolicyObject,
+    sepol6: PolicyObject,
+    sepol7: PolicyObject,
+}
+
+impl<'a> TryFrom<&'a NormalPerm<'a>> for Vec<AtomicStatement> {
+    type Error = anyhow::Error;
+    fn try_from(perm: &'a NormalPerm<'a>) -> Result<Self> {
+        let mut result = vec![];
+        let subcmd = match perm.op {
+            "allow" => 1,
+            "deny" => 2,
+            "auditallow" => 3,
+            "dontaudit" => 4,
+            _ => 0,
+        };
+        for &s in &perm.source {
+            for &t in &perm.target {
+                for &c in &perm.class {
+                    for &p in &perm.perm {
+                        result.push(AtomicStatement {
+                            cmd: CMD_NORMAL_PERM,
+                            subcmd,
+                            sepol1: s.try_into()?,
+                            sepol2: t.try_into()?,
+                            sepol3: c.try_into()?,
+                            sepol4: p.try_into()?,
+                            sepol5: PolicyObject::None,
+                            sepol6: PolicyObject::None,
+                            sepol7: PolicyObject::None,
+                        });
+                    }
+                }
+            }
+        }
+        Ok(result)
+    }
+}
+
+impl<'a> TryFrom<&'a XPerm<'a>> for Vec<AtomicStatement> {
+    type Error = anyhow::Error;
+    fn try_from(perm: &'a XPerm<'a>) -> Result<Self> {
+        let mut result = vec![];
+        let subcmd = match perm.op {
+            "allowxperm" => 1,
+            "auditallowxperm" => 2,
+            "dontauditxperm" => 3,
+            _ => 0,
+        };
+        for &s in &perm.source {
+            for &t in &perm.target {
+                for &c in &perm.class {
+                    result.push(AtomicStatement {
+                        cmd: CMD_XPERM,
+                        subcmd,
+                        sepol1: s.try_into()?,
+                        sepol2: t.try_into()?,
+                        sepol3: c.try_into()?,
+                        sepol4: perm.operation.try_into()?,
+                        sepol5: perm.perm_set.try_into()?,
+                        sepol6: PolicyObject::None,
+                        sepol7: PolicyObject::None,
+                    });
+                }
+            }
+        }
+        Ok(result)
+    }
+}
+
+impl<'a> TryFrom<&'a TypeState<'a>> for Vec<AtomicStatement> {
+    type Error = anyhow::Error;
+    fn try_from(perm: &'a TypeState<'a>) -> Result<Self> {
+        let mut result = vec![];
+        let subcmd = match perm.op {
+            "permissive" => 1,
+            "enforcing" => 2,
+            _ => 0,
+        };
+        for &t in &perm.stype {
+            result.push(AtomicStatement {
+                cmd: CMD_TYPE_STATE,
+                subcmd,
+                sepol1: t.try_into()?,
+                sepol2: PolicyObject::None,
+                sepol3: PolicyObject::None,
+                sepol4: PolicyObject::None,
+                sepol5: PolicyObject::None,
+                sepol6: PolicyObject::None,
+                sepol7: PolicyObject::None,
+            });
+        }
+        Ok(result)
+    }
+}
+
+impl<'a> TryFrom<&'a Type<'a>> for Vec<AtomicStatement> {
+    type Error = anyhow::Error;
+    fn try_from(perm: &'a Type<'a>) -> Result<Self> {
+        let mut result = vec![];
+        for &attr in &perm.attrs {
+            result.push(AtomicStatement {
+                cmd: CMD_TYPE,
+                subcmd: 0,
+                sepol1: perm.name.try_into()?,
+                sepol2: attr.try_into()?,
+                sepol3: PolicyObject::None,
+                sepol4: PolicyObject::None,
+                sepol5: PolicyObject::None,
+                sepol6: PolicyObject::None,
+                sepol7: PolicyObject::None,
+            });
+        }
+        Ok(result)
+    }
+}
+
+impl<'a> TryFrom<&'a TypeAttr<'a>> for Vec<AtomicStatement> {
+    type Error = anyhow::Error;
+    fn try_from(perm: &'a TypeAttr<'a>) -> Result<Self> {
+        let mut result = vec![];
+        for &t in &perm.stype {
+            for &attr in &perm.sattr {
+                result.push(AtomicStatement {
+                    cmd: CMD_TYPE_ATTR,
+                    subcmd: 0,
+                    sepol1: t.try_into()?,
+                    sepol2: attr.try_into()?,
+                    sepol3: PolicyObject::None,
+                    sepol4: PolicyObject::None,
+                    sepol5: PolicyObject::None,
+                    sepol6: PolicyObject::None,
+                    sepol7: PolicyObject::None,
+                });
+            }
+        }
+        Ok(result)
+    }
+}
+
+impl<'a> TryFrom<&'a Attr<'a>> for Vec<AtomicStatement> {
+    type Error = anyhow::Error;
+    fn try_from(perm: &'a Attr<'a>) -> Result<Self> {
+        let result = vec![AtomicStatement {
+            cmd: CMD_ATTR,
+            subcmd: 0,
+            sepol1: perm.name.try_into()?,
+            sepol2: PolicyObject::None,
+            sepol3: PolicyObject::None,
+            sepol4: PolicyObject::None,
+            sepol5: PolicyObject::None,
+            sepol6: PolicyObject::None,
+            sepol7: PolicyObject::None,
+        }];
+        Ok(result)
+    }
+}
+
+impl<'a> TryFrom<&'a TypeTransition<'a>> for Vec<AtomicStatement> {
+    type Error = anyhow::Error;
+    fn try_from(perm: &'a TypeTransition<'a>) -> Result<Self> {
+        let mut result = vec![];
+        let obj = match perm.object_name {
+            Some(obj) => obj.try_into()?,
+            None => PolicyObject::None,
+        };
+        result.push(AtomicStatement {
+            cmd: CMD_TYPE_TRANSITION,
+            subcmd: 0,
+            sepol1: perm.source.try_into()?,
+            sepol2: perm.target.try_into()?,
+            sepol3: perm.class.try_into()?,
+            sepol4: perm.default_type.try_into()?,
+            sepol5: obj,
+            sepol6: PolicyObject::None,
+            sepol7: PolicyObject::None,
+        });
+        Ok(result)
+    }
+}
+
+impl<'a> TryFrom<&'a TypeChange<'a>> for Vec<AtomicStatement> {
+    type Error = anyhow::Error;
+    fn try_from(perm: &'a TypeChange<'a>) -> Result<Self> {
+        let mut result = vec![];
+        let subcmd = match perm.op {
+            "type_change" => 1,
+            "type_member" => 2,
+            _ => 0,
+        };
+        result.push(AtomicStatement {
+            cmd: CMD_TYPE_CHANGE,
+            subcmd,
+            sepol1: perm.source.try_into()?,
+            sepol2: perm.target.try_into()?,
+            sepol3: perm.class.try_into()?,
+            sepol4: perm.default_type.try_into()?,
+            sepol5: PolicyObject::None,
+            sepol6: PolicyObject::None,
+            sepol7: PolicyObject::None,
+        });
+        Ok(result)
+    }
+}
+
+impl<'a> TryFrom<&'a GenFsCon<'a>> for Vec<AtomicStatement> {
+    type Error = anyhow::Error;
+    fn try_from(perm: &'a GenFsCon<'a>) -> Result<Self> {
+        let result = vec![AtomicStatement {
+            cmd: CMD_GENFSCON,
+            subcmd: 0,
+            sepol1: perm.fs_name.try_into()?,
+            sepol2: perm.partial_path.try_into()?,
+            sepol3: perm.fs_context.try_into()?,
+            sepol4: PolicyObject::None,
+            sepol5: PolicyObject::None,
+            sepol6: PolicyObject::None,
+            sepol7: PolicyObject::None,
+        }];
+        Ok(result)
+    }
+}
+
+impl<'a> TryFrom<&'a PolicyStatement<'a>> for Vec<AtomicStatement> {
+    type Error = anyhow::Error;
+    fn try_from(value: &'a PolicyStatement) -> Result<Self> {
+        match value {
+            PolicyStatement::NormalPerm(perm) => perm.try_into(),
+            PolicyStatement::XPerm(perm) => perm.try_into(),
+            PolicyStatement::TypeState(perm) => perm.try_into(),
+            PolicyStatement::Type(perm) => perm.try_into(),
+            PolicyStatement::TypeAttr(perm) => perm.try_into(),
+            PolicyStatement::Attr(perm) => perm.try_into(),
+            PolicyStatement::TypeTransition(perm) => perm.try_into(),
+            PolicyStatement::TypeChange(perm) => perm.try_into(),
+            PolicyStatement::GenFsCon(perm) => perm.try_into(),
+        }
+    }
+}
+
+////////////////////////////////////////////////////////////////
+///  for C FFI to call kernel interface
+///////////////////////////////////////////////////////////////
+
+#[derive(Debug)]
+#[repr(C)]
+struct FfiPolicy {
+    cmd: u32,
+    subcmd: u32,
+    sepol1: *const ffi::c_char,
+    sepol2: *const ffi::c_char,
+    sepol3: *const ffi::c_char,
+    sepol4: *const ffi::c_char,
+    sepol5: *const ffi::c_char,
+    sepol6: *const ffi::c_char,
+    sepol7: *const ffi::c_char,
+}
+
+fn to_c_ptr(pol: &PolicyObject) -> *const ffi::c_char {
+    match pol {
+        PolicyObject::None | PolicyObject::All => std::ptr::null(),
+        PolicyObject::One(s) => s.as_ptr().cast::<ffi::c_char>(),
+    }
+}
+
+impl From<AtomicStatement> for FfiPolicy {
+    fn from(policy: AtomicStatement) -> FfiPolicy {
+        FfiPolicy {
+            cmd: policy.cmd,
+            subcmd: policy.subcmd,
+            sepol1: to_c_ptr(&policy.sepol1),
+            sepol2: to_c_ptr(&policy.sepol2),
+            sepol3: to_c_ptr(&policy.sepol3),
+            sepol4: to_c_ptr(&policy.sepol4),
+            sepol5: to_c_ptr(&policy.sepol5),
+            sepol6: to_c_ptr(&policy.sepol6),
+            sepol7: to_c_ptr(&policy.sepol7),
+        }
+    }
 }
 
 pub fn check_rule(policy: &str) -> Result<()> {
